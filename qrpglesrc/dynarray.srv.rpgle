@@ -1,40 +1,14 @@
 **free
-ctl-opt main(main) actgrp(*caller);
+ctl-opt nomain;
 
-dcl-s dinamicarray_t pointer template;
-dcl-ds node_t qualified template;
-    text varchar(100) inz;
-    ptrnext like(dinamicarray_t) inz;
-end-ds;
-
-dcl-proc main;
-    dcl-s z zoned(5);
-    dcl-s array like(dinamicarray_t);
-
-    // Initialize of array
-    initializeArray(array);
-
-    // Add 10 new nodes to array
-    for z = 1 to 10;
-        addNode('Test ' + %char(z):array);
-    endfor;
-
-    // Retrieve some nodes, and write the content to the job log
-    snd-msg retrieveNode(8:array);
-    snd-msg retrieveNode(2:array);
-    snd-msg retrieveNode(9:array);
-
-    // Remove array from memory before ending the program
-    initializeArray(array);
-
-end-proc;
+/copy "/home/CLV/dynamicarray/qrpglesrc/dynarray_h.rpgle"
 
 //
-// Subprocedure initializeArray
+// Procedure initializeArray
 //
-dcl-proc initializeArray;
+dcl-proc DYN_initializeArray export;
     dcl-pi *n;
-        array like(dinamicarray_t);
+        array like(dynamicarray_t);
     end-pi;
     dcl-s found ind;
     dcl-s ptr_aux pointer;
@@ -65,12 +39,12 @@ dcl-proc initializeArray;
 end-proc;
 
 //
-// Subprocedure addNode
+// Procedure addNode
 //
-dcl-proc addNode;
+dcl-proc DYN_addNode export;
     dcl-pi *n;
         text varchar(100) const;
-        array like(dinamicarray_t);
+        array like(dynamicarray_t);
     end-pi;
     dcl-s found ind;
     dcl-s ptr_node pointer;
@@ -78,7 +52,7 @@ dcl-proc addNode;
     dcl-ds node_aux likeds(node_t) based(ptr_aux);
     dcl-ds node likeds(node_t) based(ptr_node);
 
-    // First, we create the node in dinamic memory
+    // First, we create the node in dynamic memory
     ptr_node = %alloc(%size(node));
     node.text = text;
     snd-msg 'Memory allocated';
@@ -103,12 +77,12 @@ dcl-proc addNode;
 end-proc;
 
 //
-// Subprocedure retrieveNode
+// Procedure retrieveNode
 //
-dcl-proc retrieveNode;
+dcl-proc DYN_retrieveNode export;
     dcl-pi *n varchar(100);
         number zoned(5) const;
-        array like(dinamicarray_t);
+        array like(dynamicarray_t);
     end-pi;
     dcl-s z zoned(5);
     dcl-s ptr_node pointer;

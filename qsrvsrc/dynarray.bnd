@@ -1,0 +1,5 @@
+STRPGMEXP SIGNATURE('DYNARRAY0.1') PGMLVL(*CURRENT)
+    export symbol(DYN_initializeArray)
+    export symbol(DYN_addNode)
+    export symbol(DYN_retrieveNode)
+ENDPGMEXP
