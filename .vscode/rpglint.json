@@ -1,0 +1,53 @@
+{
+    "BlankStructNamesCheck": false,
+    "QualifiedCheck": false,
+    "PrototypeCheck": false,
+    "ForceOptionalParens": true,
+    "NoOCCURS": true,
+    "NoSELECTAll": false,
+    "UppercaseConstants": true,
+    "IncorrectVariableCase": false,
+    "RequiresParameter": true,
+    "StringLiteralDupe": false,
+    "NoSQLJoins": true,
+    "NoCTDATA": true,
+    "PrettyComments": true,
+    "UppercaseDirectives": false,
+    "RequireBlankSpecial": true,
+    "RequiresProcedureDescription": false,
+    "NoGlobalsInProcedures": true,
+    "CopybookDirective": "include",
+    "UselessOperationCheck": true,
+    "SpecificCasing": [
+      { "operation": "FOR",
+        "expected": "for"
+      },
+      { "operation": "DOW",
+        "expected": "dow"
+      },
+      { "operation": "DOU",
+        "expected": "dou"
+      },
+      { "operation": "MONITOR",
+        "expected": "monitor"
+      },
+      { "operation": "SELECT",
+        "expected": "select"
+      },
+      { "operation": "DSPLY",
+        "expected": "dsply"
+      },
+      { "operation": "ENDDO",
+        "expected": "enddo"
+      },
+      { "operation": "ENDFOR",
+        "expected": "endfor"
+      },
+      { "operation": "ENDMON",
+        "expected": "endmon"
+      },      
+      { "operation": "ENDSL",
+        "expected": "endsl"
+      }
+    ]
+  }
