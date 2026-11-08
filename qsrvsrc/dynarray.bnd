@@ -1,5 +1,13 @@
 STRPGMEXP SIGNATURE('DYNARRAY0.1') PGMLVL(*CURRENT)
+/* Never change the order of these exports, and add new ones at the     */
+/* end: programs bound to DYNARRAY find each procedure by its position. */
+/* That way they keep working without being bound again.                */
     export symbol(DYN_initializeArray)
     export symbol(DYN_addNode)
     export symbol(DYN_retrieveNode)
+    export symbol(DYN_update)
+    export symbol(DYN_delete)
+    export symbol(DYN_count)
+    export symbol(DYN_find)
+    export symbol(DYN_free)
 ENDPGMEXP
