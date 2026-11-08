@@ -1,13 +1,13 @@
 **free
-ctl-opt main(main) bnddir('CLV1/DYNARRAY');
+ctl-opt main(main);
 
-/copy "/home/CLV/dynamicarray/qrpglesrc/dynarray_h.rpgle"
+/include qrpglesrc/dynarray_h.rpgle
 
 dcl-proc main;
     dcl-s z zoned(5);
     dcl-s array like(dynamicarray_t);
 
-    // Initialize of array
+    // The array starts empty (*NULL), but initializing it doesn't hurt
     DYN_initializeArray(array);
 
     // Add 10 new nodes to array
@@ -19,6 +19,7 @@ dcl-proc main;
     snd-msg DYN_retrieveNode(8:array);
     snd-msg DYN_retrieveNode(2:array);
     snd-msg DYN_retrieveNode(9:array);
+    snd-msg DYN_retrieveNode(99:array);   // doesn't exist: 'ERROR'
 
     // Remove array from memory before ending the program
     DYN_initializeArray(array);
