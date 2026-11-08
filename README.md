@@ -1,33 +1,65 @@
 # Dynamic array in RPG (IBM i)
 
-A small RPG service program, `DYNARRAY`, that keeps a list of texts in
-dynamic memory. The list grows as you add elements, so you don't have to
+A small RPG service program, `DYNARRAY`, that keeps an array of texts in
+dynamic memory. The array grows as you add elements, so you don't have to
 choose a size for it at compile time.
 
-Internally the list is a singly linked list of nodes allocated with
-`%alloc`. The example shows how to work with pointers, based data
-structures and dynamic memory in RPG, and how to package procedures in a
-service program with a binding directory.
+The example shows how to work with pointers, based variables and dynamic
+memory (`%alloc`, `%realloc`, `dealloc`) in RPG, and how to package
+procedures in a service program with a binding directory.
 
 ## The procedures
 
 | Procedure | What it does |
 | --- | --- |
-| `DYN_addNode(text : array)` | Adds `text` (up to 100 characters) at the end of the list |
-| `DYN_retrieveNode(number : array)` | Returns the text of element `number`. The first one is 1. Returns `'ERROR'` if the element doesn't exist |
-| `DYN_initializeArray(array)` | Frees every element and leaves the list empty |
+| `DYN_addNode(text : array)` | Adds `text` (up to 65535 characters) at the end of the array |
+| `DYN_retrieveNode(number : array)` | Returns the text of element `number`. Returns `'ERROR'` if it doesn't exist |
+| `DYN_update(number : text : array)` | Replaces the text of element `number`. Returns `*off` if it doesn't exist |
+| `DYN_delete(number : array)` | Removes element `number`; the elements after it move up one position. Returns `*off` if it doesn't exist |
+| `DYN_count(array)` | Returns the number of elements |
+| `DYN_find(text : array)` | Returns the number of the first element equal to `text`, or 0 |
+| `DYN_free(array)` | Frees the array and leaves it empty |
+| `DYN_initializeArray(array)` | Same as `DYN_free`. Kept for programs written for earlier versions |
 
-The prototypes are in [`qrpglesrc/dynarray_h.rpgle`](qrpglesrc/dynarray_h.rpgle).
+Elements are numbered from 1. The prototypes are in
+[`qrpglesrc/dynarray_h.rpgle`](qrpglesrc/dynarray_h.rpgle).
+
+## How it works
+
+Your program holds a pointer (`like(dynamicarray_t)`) that starts as
+`*NULL`. The first `DYN_addNode` allocates a small header with the number
+of elements, the capacity, and a pointer to the *slots*. There is one slot
+per element, stored one after the other in a single block of memory, so
+element *n* is found by its position. When the block is full, its size is
+doubled with `%realloc`.
+
+A slot doesn't hold the text, only a pointer to it and its length. Each
+text has its own allocation of exactly its length: a text of 10 characters
+uses 10 bytes, plus 32 for its slot, even if other elements have 25000.
+
+So:
+
+- Retrieving, updating and adding elements take the same time whatever the
+  size of the array.
+- Deleting an element moves all the elements after it, and `DYN_find`
+  compares the elements one by one. Both get slower as the array grows.
+- The service program uses teraspace storage (`ALLOC(*TERASPACE)`), so the
+  array isn't limited to the 16 MB of a single-level storage allocation.
 
 Things to know before you use it:
 
-- **Free the list when you are done** with `DYN_initializeArray`. The memory
-  belongs to the activation group of the caller and is only released when
-  that activation group ends.
-- Adding an element and retrieving element *n* walk the list from the
-  beginning, so they get slower as the list grows. That's fine for hundreds
-  or a few thousand elements, but not for very large lists.
-- Elements are `varchar(100)`. Longer texts are truncated.
+- **Free the array when you are done** with `DYN_free`. The memory belongs
+  to the activation group of the caller and is only released when that
+  activation group ends.
+- Elements can be up to 65535 characters long (`DYN_MAX_LENGTH`). Longer
+  texts are truncated.
+- Don't change the pointer yourself or read the memory it points to. Use
+  the procedures: the layout of that memory may change between versions.
+
+RPG also has native varying-dimension arrays (`DIM(*AUTO)` and
+`DIM(*VAR)`) in recent releases. Use them if they fit your needs. This
+project is useful when you want to pass an array between programs and
+procedures as a single pointer, or to learn how dynamic memory works in RPG.
 
 ## What's in the repo
 
@@ -74,9 +106,9 @@ library (`&CURLIB`) as `BIN_LIB`.
 CALL PGM(MYLIB/EXAMPLE01)
 ```
 
-The example adds 10 elements, writes elements 8, 2, 9 and 99 to the job
-log, and frees the list. Element 99 doesn't exist, so it writes `ERROR`.
-Look at the result with `DSPJOBLOG`.
+The example adds 1000 elements, then retrieves, updates, deletes and finds
+some of them, adds a text of 25000 characters, and frees the array. It writes each result to the job log,
+next to the expected value in the source. Look at it with `DSPJOBLOG`.
 
 ## Using it in your own programs
 
@@ -87,14 +119,17 @@ ctl-opt main(main) dftactgrp(*no) bnddir('DYNARRAY');
 /include qrpglesrc/dynarray_h.rpgle
 
 dcl-proc main;
+    dcl-s i int(10);
     dcl-s list like(dynamicarray_t);
 
     DYN_addNode('First' : list);
     DYN_addNode('Second' : list);
 
-    snd-msg DYN_retrieveNode(2 : list);   // Second
+    for i = 1 to DYN_count(list);
+        snd-msg DYN_retrieveNode(i : list);
+    endfor;
 
-    DYN_initializeArray(list);            // free the memory
+    DYN_free(list);
 end-proc;
 ```
 
@@ -106,6 +141,9 @@ for example:
 CRTBNDRPG PGM(MYLIB/MYPGM) SRCSTMF('/home/me/mypgm.rpgle')
           INCDIR('/home/me/dynamicarray')
 ```
+
+New versions only add procedures at the end of the binder source, so
+programs that are already compiled keep working without being bound again.
 
 ## License
 
